@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional
 public class TokenizationService {
     private static final int TOKEN_LENGTH = 32;
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("^[0-9A-Za-z]{32}$");
 
     private final TokenMappingRepository repository;
     private final TokenGenerator tokenGenerator;
@@ -54,9 +56,17 @@ public class TokenizationService {
         if (token == null || token.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token must not be blank");
         }
+        // Validate token format before database lookup
+        if (!TOKEN_PATTERN.matcher(token).matches()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid token format. Expected 32 characters in [0-9A-Za-z]."
+            );
+        }
 
+        // Perform lookup only after format validation
         TokenMapping mapping = repository.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found: " + token));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token not found"));
 
         return mapping.getAccountNumber();
     }

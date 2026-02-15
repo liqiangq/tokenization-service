@@ -17,7 +17,7 @@ It uses an in-memory database (H2) and does not rely on any external systems.
 
 ## Tech Stack
 
-- Java 21
+- Java 17
 - Spring Boot 3
 - Spring Data JPA
 - H2 In-Memory Database

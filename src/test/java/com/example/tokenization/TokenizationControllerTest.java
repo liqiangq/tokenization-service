@@ -91,8 +91,21 @@ public class TokenizationControllerTest {
     }
 
     @Test
+    void detokenize_invalidTokenFormat_shouldReturn400() throws Exception {
+        List<String> tokens = List.of("unknown-token-123"); // invalid (wrong length/charset)
+        mockMvc.perform(
+                        post("/detokenize")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(tokens))
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void detokenize_unknownToken_shouldReturn404() throws Exception {
-        List<String> tokens = List.of("unknown-token-123");
+        // valid token format (32 chars base62) but does not exist in DB
+        String validButUnknown = "A".repeat(32);
+        List<String> tokens = List.of(validButUnknown);
 
         mockMvc.perform(
                         post("/detokenize")
