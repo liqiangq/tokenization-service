@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface TokenMappingRepository extends JpaRepository<TokenMapping, Long> {
 
-    Optional<TokenMapping> findByAccountNumber(String token);
+    Optional<TokenMapping> findByAccountNumber(String accountNumber);
     Optional<TokenMapping> findByToken(String token);
-    Boolean existsByToken(String token);
+    boolean existsByToken(String token);
 }

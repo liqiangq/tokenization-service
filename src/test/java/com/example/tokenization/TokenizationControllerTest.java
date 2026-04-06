@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -103,7 +104,6 @@ public class TokenizationControllerTest {
 
     @Test
     void detokenize_unknownToken_shouldReturn404() throws Exception {
-        // valid token format (32 chars base62) but does not exist in DB
         String validButUnknown = "A".repeat(32);
         List<String> tokens = List.of(validButUnknown);
 
@@ -113,6 +113,38 @@ public class TokenizationControllerTest {
                                 .content(objectMapper.writeValueAsString(tokens))
                 )
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void tokenize_blankAccount_shouldReturnStructured400() throws Exception {
+        MvcResult result = mockMvc.perform(
+                        post("/tokenize")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(List.of("   ")))
+                )
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        Map<String, Object> error = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+        assertThat(error.get("status")).isEqualTo(400);
+        assertThat(error.get("message")).isEqualTo("Account number must not be blank");
+        assertThat(error.get("path")).isEqualTo("/tokenize");
+    }
+
+    @Test
+    void detokenize_emptyArray_shouldReturn400() throws Exception {
+        MvcResult result = mockMvc.perform(
+                        post("/detokenize")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(List.of()))
+                )
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        Map<String, Object> error = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+        assertThat(error.get("message")).isEqualTo("Request body must be a JSON array of tokens");
     }
 
 }
